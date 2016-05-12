@@ -155,7 +155,7 @@ io.on('connection', function(socket) {
 
 	// -------------------- State management ------------------------------------------------------
 	var stateV1 = 0;
-​
+	
 	socket.on('alert', function(msg) {
 		if (msg.ID == 1){
 			stateV1 = msg.State;

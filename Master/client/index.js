@@ -6,12 +6,204 @@ var carsConnected = [];
 var etatConnV1 = 0;
 var etatConnV2 = 0;
 var platooningState = 0;
-$("#led-link").on('click', function(e){
-    socket.emit('toogle led', {value: 0, userId: userId});
+var state= 0;
+
+// ---------------- Pour commandes voiture ------------------
+
+//envoie la commande de 
+$('#acc-slider').slider().on('slide',function(val) {
+	dutyCycle = val.value;
+	socket.emit('updateDuty',dutyCycle);
 });
+
+var boutonTourneGauche = $('#bouton-tourne-gauche');
+var boutonTourneDroite = $('#bouton-tourne-droite');
+
+boutonTourneGauche.on('touchstart',function(){
+	if (state == 4) {
+		socket.emit('terminatePlatooning');
+	}
+
+	socket.emit('tourneGauche');
+});
+
+boutonTourneGauche.on('touchend',function(){
+	socket.emit('arreteTourner');
+});
+
+boutonTourneDroite.on('touchstart',function(){
+
+	if (state == 4) {
+		socket.emit('terminatePlatooning');
+	}
+
+	socket.emit('tourneDroite');
+});
+
+boutonTourneDroite.on('touchend',function(){
+	socket.emit('arreteTourner');
+});
+
+var boutonState = $('#bouton-change-dir');
+
+boutonState.on('click', function() {
+
+	if(state == 3) {
+		socket.emit('initiatePlatooning');
+	} else if (state == 4) {
+		socket.emit('terminatePlatooning');
+	};
+
+});
+
+
+//Prevents scrolling on mobile devices
+$(document).on('touchmove', function(e) {
+    e.preventDefault();
+});
+
+
+
+// ----------------------------------------- State switching ----------------------------------------------
+
+socket.on('changeStateToWeb', function(msg){
+	state = msg.State;
+
+	var leftButton = $("#bouton-tourne-gauche");
+	var rightButton = $("#bouton-tourne-droite");
+	var platoonButton = $("#bouton-change-dir");
+
+	switch(state) {
+    case 0:
+        //offline
+        leftButton.addClass("btn-default");
+        leftButton.removeClass("btn-success");
+        rightButton.addClass("btn-default");
+        rightButton.removeClass("btn-success");
+
+        platoonButton.disabled = true;
+        platoonButton.find("span").text="Offline";
+        platoonButton.addClass("btn-danger");
+        platoonButton.removeClass("btn-warning");
+        platoonButton.removeClass("btn-success");
+        platoonButton.removeClass("btn-info");
+        platoonButton.removeClass("btn-primary");
+        break;
+    case 1:
+        //connected
+        leftButton.removeClass("btn-default");
+        leftButton.addClass("btn-success");
+        rightButton.removeClass("btn-default");
+        rightButton.addClass("btn-success");
+
+        platoonButton.disabled = true;
+        platoonButton.find("span").text="Connected";
+        platoonButton.addClass("btn-danger");
+        platoonButton.removeClass("btn-warning");
+        platoonButton.removeClass("btn-success");
+        platoonButton.removeClass("btn-info");
+        platoonButton.removeClass("btn-primary");
+
+        break;
+    case 2:
+    	//proximity
+    	leftButton.removeClass("btn-default");
+        leftButton.addClass("btn-success");
+        rightButton.removeClass("btn-default");
+        rightButton.addClass("btn-success");
+
+        platoonButton.disabled = true;
+        platoonButton.find("span").text="Proximity to car";
+        platoonButton.addClass("btn-warning");
+        platoonButton.removeClass("btn-primary");
+        platoonButton.removeClass("btn-success");
+        platoonButton.removeClass("btn-info");
+        platoonButton.removeClass("btn-primary");
+
+    	break;
+    case 3:
+    	//ready to platoon
+    	leftButton.removeClass("btn-default");
+        leftButton.addClass("btn-success");
+        rightButton.removeClass("btn-default");
+        rightButton.addClass("btn-success");
+
+        platoonButton.disabled = false;
+        platoonButton.find("span").text="Ready to platoon";
+        platoonButton.addClass("btn-success");
+        platoonButton.removeClass("btn-warning");
+        platoonButton.removeClass("btn-danger");
+        platoonButton.removeClass("btn-info");
+        platoonButton.removeClass("btn-primary");
+
+    	break;
+	case 4:
+		//platooning
+		leftButton.removeClass("btn-default");
+        leftButton.addClass("btn-success");
+        rightButton.removeClass("btn-default");
+        rightButton.addClass("btn-success");
+
+        platoonButton.disabled = false;
+        platoonButton.find("span").text="Platooning";
+        platoonButton.addClass("btn-info");
+        platoonButton.removeClass("btn-warning");
+        platoonButton.removeClass("btn-success");
+        platoonButton.removeClass("btn-danger");
+        platoonButton.removeClass("btn-primary");
+
+		break;
+
+    default:
+        break;
+	}
+
+});
+
+//Demande l'état du système périodiquement pour rester au courant.
 setInterval(function(){
-	socket.emit('requestInfo');
-},2000);
+	socket.emit('requestState');
+},1000);
+
+//Emergency
+socket.on('emergencyStop',function(){
+	$(".emergency-stop").style.display = "block";
+});
+
+
+
+
+
+var boutonVoiture1 = $("#bouton-voiture-1");
+var boutonVoiture2 = $("#bouton-voiture-2");
+setInterval(function() {
+	var spanV1 = boutonVoiture1.find('span');
+	if (etatConnV1 == 1) {
+		spanV1.removeClass('label-danger');
+		spanV2.addClass('label-success');
+	} else {
+		spanV1.removeClass('label-success');
+		spanV1.addClass('label-danger')
+	}
+	var spanV2 = boutonVoiture2.find('span');
+	if (etatConnV2 == 1) {
+		spanV2.removeClass('label-danger');
+		spanV2.addClass('label-success');
+	} else {
+		spanV2.removeClass('label-success');
+		spanV2.addClass('label-danger');
+	}
+	$('#infoSystemText').val('');
+}, 2000);
+
+
+
+
+
+// Things we dont use anymore.
+
+
+
 socket.on('infoToWeb',function(msg){
 	console.log('hei hei');
 	var update = 0;
@@ -25,6 +217,9 @@ socket.on('infoToWeb',function(msg){
 	platooningState = msg.plat;
 	carsConnected = msg.connectedCars;
 });
+
+
+
 var updateDOM = function(){
 	var container1 = $("#car1container");
 	var container2 = $("#car2container");
@@ -54,6 +249,8 @@ var updateDOM = function(){
     	led.addClass('off');	
 	}
 };
+
+
 socket.on('foundDeviceToClient', function(msg) {
     if (msg.ID == 1) {
 		var container = $("#car1container");
@@ -72,6 +269,7 @@ socket.on('lostDeviceToClient', function(msg) {
     led.removeClass('on');
     led.addClass('off');
 });
+
 socket.on('carInfoToClient',function(msg){
 	if (msg.ID == 1) {
 		var container = $("#car1container");
@@ -87,6 +285,8 @@ socket.on('carInfoToClient',function(msg){
     led.removeClass('off');
     led.addClass('on');
 })
+
+
 socket.on('carDisconnect',function(msg){
 	if (msg.ID == 1) {
 		var container = $("#car1container");
@@ -105,68 +305,3 @@ socket.on('carDisconnect',function(msg){
 window.onunload = function(e) {
     socket.emit("user disconnect", userId);
 }
-// ---------------- Pour commandes voiture ------------------
-$('#acc-slider').slider().on('slide',function(val) {
-	dutyCycle = val.value;
-	socket.emit('updateDuty',dutyCycle);
-});
-var boutonTourneGauche = $('#bouton-tourne-gauche');
-var boutonTourneDroite = $('#bouton-tourne-droite');
-boutonTourneGauche.on('touchstart',function(){
-		socket.emit('tourneGauche');
-});
-boutonTourneGauche.on('touchend',function(){
-	socket.emit('arreteTourner');
-});
-boutonTourneDroite.on('touchstart',function(){
-	socket.emit('tourneDroite');
-});
-boutonTourneDroite.on('touchend',function(){
-	socket.emit('arreteTourner');
-});
-var boutonChangeDir = $('#bouton-change-dir');
-var direction = 1;
-boutonChangeDir.on('click', function() {
-	socket.emit('changeDir');
-	var spanBouton = boutonChangeDir.find('span');
-	console.log('salut')
-	if(direction==1) {
-		console.log('activate arriere');
-		direction=0;
-		spanBouton.removeClass('glyphicon-arrow-up');
-		spanBouton.addClass('glyphicon-arrow-down');
-	} else {
-		console.log('activate avant');
-		direction=1;
-		spanBouton.removeClass('glyphicon-arrow-down');
-		spanBouton.addClass('glyphicon-arrow-up');
-	}
-});
-​
-var boutonVoiture1 = $("#bouton-voiture-1");
-var boutonVoiture2 = $("#bouton-voiture-2");
-setInterval(function() {
-	var spanV1 = boutonVoiture1.find('span');
-	if (etatConnV1 == 1) {
-		spanV1.removeClass('label-danger');
-		spanV2.addClass('label-success');
-	} else {
-		spanV1.removeClass('label-success');
-		spanV1.addClass('label-danger')
-	}
-	var spanV2 = boutonVoiture2.find('span');
-	if (etatConnV2 == 1) {
-		spanV2.removeClass('label-danger');
-		spanV2.addClass('label-success');
-	} else {
-		spanV2.removeClass('label-success');
-		spanV2.addClass('label-danger');
-	}
-	$('#infoSystemText').val('');
-}, 2000);
-​
-	
-//Prevents scrolling on mobile devices
-$(document).on('touchmove', function(e) {
-    e.preventDefault();
-});
