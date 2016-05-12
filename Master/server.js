@@ -100,7 +100,7 @@ io.on('connection', function(socket) {
 		//Met a jour l'etat de la connection
 		if (msg.ID == 1) {
 			state = 1;
-			socket.emit('changeStateToWeb', {State:state});
+			io.emit('changeStateToWeb', {State:state});
 			etatConnV1 = 1;
 			wd1=1;
 			car1.uuid = msg.UUID;
@@ -111,12 +111,12 @@ io.on('connection', function(socket) {
 			car2.uuid = msg.UUID;
 			car2.id = msg.ID;
 		}
-		socket.emit('ackConnectCar');
+		io.emit('ackConnectCar');
 
 		console.log('car connected');
 	});
 
-	socket.on('wdToServer',function(msg){
+	io.on('wdToServer',function(msg){
 		if(msg.ID == 1) {
 			if(wd1 != 0) {
 				wd1--;
@@ -135,17 +135,17 @@ io.on('connection', function(socket) {
 ​
 	socket.on('alert', function(msg) {
 		state = msg.State;
-		socket.emit('changeStateToWeb', {State:state});
+		io.emit('changeStateToWeb', {State:state});
 		console.log('Wrong state before change')
 	});
 
 	socket.on('requestState', function(){
-		socket.emit('changeStateToWeb', {State:state});
+		io.emit('changeStateToWeb', {State:state});
 	});
 
 	socket.on('stateChange', function(msg) {
 		state = msg.State;
-		socket.emit('changeStateToWeb', {State:state});
+		io.emit('changeStateToWeb', {State:state});
 	})
 
 	// ----------------------- Proximity ---------------------------
@@ -158,8 +158,8 @@ io.on('connection', function(socket) {
 				car1.found_uuid = msg.foundUUID;
 				if ((car2.found) && (car2.uuid == car1.found_uuid) && (car1.uuid == car2.found_uuid)) {
 					state = 2;
-					socket.emit('setStateProx');
-					socket.emit('changeStateToWeb', {State:state});
+					io.emit('setStateProx');
+					io.emit('changeStateToWeb', {State:state});
 				}	
 			}
 			if(msg.ID == 2){
@@ -167,8 +167,8 @@ io.on('connection', function(socket) {
 				car2.found_uuid = msg.foundUUID;
 				if ((car1.found) && (car2.uuid == car1.found_uuid) && (car1.uuid == car2.found_uuid)) {
 					state = 2;
-					socket.emit('setStateProx');
-					socket.emit('changeStateToWeb', {State:state});
+					io.emit('setStateProx');
+					io.emit('changeStateToWeb', {State:state});
 				}	
 			}
 		}
@@ -183,8 +183,8 @@ io.on('connection', function(socket) {
 				car2.found = false;
 			}
 			state = 1;
-			socket.emit('changeStateToWeb', {State:state});
-			socket.emit('setStateNotProx');
+			io.emit('changeStateToWeb', {State:state});
+			io.emit('setStateNotProx');
 		}
 	});
 
@@ -193,13 +193,15 @@ io.on('connection', function(socket) {
 
 socket.on('initatePlatooning', function() {
 	if (state == 3) {
-		socket.emit('startPlatooning');
+		io.emit('startPlatooning');
+		state = 4;
+		io.emit('changeStateToWeb', {State:state});
 	}
 });
 
 socket.on('terminatePlatooning', function() {
 	if (state == 4) {
-		socket.emit('stopPlatooning');
+		io.emit('stopPlatooning');
 	}
 })
 
