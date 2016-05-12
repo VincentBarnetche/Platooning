@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title>Platooning</title>
+    <!--    -->
+    <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="cover.css" rel="stylesheet">
+    <link href="grid.css" rel="stylesheet">
+    <link href="index.css" rel="stylesheet">
+    <link href="bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="main-content">
+    <div class="sub-main-content">
+        <button type="button" id="bouton-tourne-gauche" class="btn btn-lg btn-success"><span class="glyphicon glyphicon-arrow-left"></span></button>
+    </div>
+    <div class="sub-main-content">
+            <input
+                id="acc-slider"
+                type="text"
+                name="somename"
+                data-provide="slider"
+                data-slider-min="0"
+                data-slider-max="1"
+                data-slider-step="0.05"
+                data-slider-value="1"
+                data-slider-tooltip="hide"
+                data-slider-orientation="vertical"
+            >
+    </div>
+    <div class="sub-main-content">
+        <button type="button" id="bouton-tourne-droite" class="btn btn-lg btn-success"><span class="glyphicon glyphicon-arrow-right"></span></button>
+    </div>
+    <div class="sub-sub-main-content" style="clear:both;">
+        <button type="button" id="bouton-change-dir" class="btn btn-lg btn-warning"><span class="glyphicon glyphicon-arrow-up"></span></button>
+    </div>
+  </div>
+  <div class = "sub-sub-sub-main-content" style="clear:both;">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">System Info</h3>
+            </div>
+            <div class="panel-body">
+                <div class="bouton-box">
+                    <span class="label label-danger" id="bouton-voiture-1">Voiture1</span>        
+                </div>    
+                <div class="bouton-box">
+                    <span class="label label-danger" id="bouton-voiture-2">Voiture2</span>
+                </div>
+                <div class="info-box" style="clear:both;">
+                    <textarea name="title_distance">Distance : </textarea>   
+                    <textarea id="infoSystemText" name="infoSystem">uknown</textarea>
+                </div>        
+            </div>
+        </div>
+    </div>  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="socket.io/socket.io.js"></script>
+    <script src="bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="client/index.js"></script>   
+</body>
+</html>
