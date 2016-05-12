@@ -130,7 +130,6 @@ io.on('connection', function(socket) {
 
 
 	// -------------------- State management ------------------------------------------------------
-​
 	socket.on('alert', function(msg) {
 		state = msg.State;
 		io.emit('changeStateToWeb', {State:state});
