@@ -29,13 +29,13 @@ var eventEmitter = new events.EventEmitter();
 
 //Tableau qui contient les voitures connectées
 var carsConnected = [];
-var uuid_liste = [];
+var uuid_liste = ['5affffffffffffffffffffffffffffff'];
 
 var car1Plat = {};
 var car2Plat = {};
 
-var car1 = {found:"false", found_uuid:"", uuid:"", id:""}
-var car2 = {found:"false", found_uuid:"", uuid:"", id:""}
+var car1 = {found:false, found_uuid:'', uuid:'', id:0}
+var car2 = {found:true, found_uuid:'e2c56db5dffb48d2b060d0f5a71096e0', uuid:'5affffffffffffffffffffffffffffff', id:2}
 
 // Etats du système
 var etatConnV1 = 0;
@@ -51,26 +51,35 @@ wd2=0;
 setInterval(function(){
 	if (etatConnV1 == 1) {
 		wd1 ++;
-		if(wd1>7) {
+		if(wd1>4) {
 			etatConnV1 = 0;
-			var removedItem = uuid_liste.splice(pos,uuid_liste.indexOf(car1.uuid)); 
+			var removedItem = uuid_liste.splice(uuid_liste.indexOf(car1.uuid),1); 
 			console.log('connection lost to car 1');
+			io.emit('changeStateToWeb', {State:state});
 		} 
 	}
 
 	if (etatConnV2 == 1) {
 		wd2 ++;
-		if (wd2>7) {
+		if (wd2>4) {
 			etatConnV2=0;
-			var removedItem = uuid_liste.splice(pos,uuid_liste.indexOf(car2.uuid)); 
+			var removedItem = uuid_liste.splice(uuid_liste.indexOf(car2.uuid),1); 
 			console.log('connection lost to car 2');
 		}
 	}
 
 	// si on pert la connection d'une des voitures pendant le platooning
-	if ((state == 4)&&((etatConnV1==0)||(etatConnV2==0))) {
+
+	// avec voiture 2: if ((state == 4)&&((etatConnV1==0)||(etatConnV2==0))) {
+
+	if ((state == 4)&&((etatConnV1==0))) {
 		eventEmitter.emit('emergencyStop');
 	}
+
+	if(etatConnV1==0) {
+		state = 0;
+	}
+
 
 	io.emit('wdFromServer');
 
@@ -81,7 +90,7 @@ eventEmitter.on('emergencyStop',function(){
 	etatConnV2=0;
 	etatConnV1=0;
 	io.emit('emergencyStop');
-	console.log('egergency stop');
+	console.log('emergency stop');
 });
 
 
@@ -107,22 +116,20 @@ io.on('connection', function(socket) {
 			wd1=1;
 			car1.uuid = msg.UUID;
 			car1.id = msg.ID;
-			var newLength = uuid_liste.push("car1.uuid");
+			uuid_liste.push(car1.uuid);
+			console.log('car 1 connected');
 		} else if (msg.ID == 2) {
 			etatConnV2 = 1;
 			wd2 = 1;
 			car2.uuid = msg.UUID;
 			car2.id = msg.ID;
-			var newLength = uuid_liste.push("car2.uuid");
+			uuid_liste.push(car2.uuid);
+			console.log('car 2 connected');
 		}
-		io.emit('ackConnectCar');
-
-
-
-		console.log('car connected');
+		socket.emit('ackConnectCar');
 	});
 
-	io.on('wdToServer',function(msg){
+	socket.on('wdToServer',function(msg){
 		if(msg.ID == 1) {
 			if(wd1 != 0) {
 				wd1--;
@@ -144,6 +151,7 @@ io.on('connection', function(socket) {
 
 	socket.on('requestState', function(){
 		io.emit('changeStateToWeb', {State:state});
+		socket.emit('wdWeb');
 	});
 
 	socket.on('stateChange', function(msg) {
@@ -154,7 +162,7 @@ io.on('connection', function(socket) {
 	// ----------------------- Proximity ---------------------------
 
 
-	socket.on('found_decive', function(msg) {
+	socket.on('found_device', function(msg) {
 		if (state == 1 || state == 2) {
 			if(msg.ID == 1){
 				car1.found = true;
@@ -194,24 +202,27 @@ io.on('connection', function(socket) {
 	// ----------------------- Platooning ------------------------
 
 
-	socket.on('initatePlatooning', function() {
+	socket.on('initiatePlatooning', function() {
 		if (state == 3) {
-			io.emit('startPlatooning');
 			state = 4;
+			console.log('initiate platooning');
+			io.emit('startPlatooning');
 			io.emit('changeStateToWeb', {State:state});
 		}
 	});
 
 	socket.on('terminatePlatooning', function() {
 		if (state == 4) {
+			state=3;
+			console.log('stop platooning');
 			io.emit('stopPlatooning');
+			io.emit('changeStateToWeb', {State:state});
 		}
 	});
 
 
 	// ----------------------- Motor commands ---------------------
 	socket.on('updateDuty',function(dutyCycle){
-		console.log(dutyCycle);
 		io.emit('setDutyCycle',dutyCycle);
 	})
 

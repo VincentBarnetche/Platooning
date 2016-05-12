@@ -19,6 +19,14 @@
         <h1>Commande platooning</h1>
     </div>
 
+    <div class="alert alert-danger" id="emergency-stop" role="alert" style="display:none;">
+    <strong>Emergency stop!</strong> The system had to shut down due to an error.
+    </div>
+
+    <div class="alert alert-warning" id="connection-warning" role="alert" style="display:none;">
+    <strong>Warning!</strong> Connection with server is lost.
+    </div>
+
     <div class="sub-main-content">
         <button type="button" id="bouton-tourne-gauche" class="btn btn-lg btn-default"><span class="glyphicon glyphicon-arrow-left"></span></button>
     </div>
@@ -41,13 +49,10 @@
         <button type="button" id="bouton-tourne-droite" class="btn btn-lg btn-default"><span class="glyphicon glyphicon-arrow-right"></span></button>
     </div>
     <div class="sub-sub-main-content" style="clear:both;">
-        <button type="button" id="bouton-change-dir" class="btn btn-lg btn-danger"><span>Offline</span></button>
+        <button type="button" id="bouton-change-dir" class="btn btn-lg btn-danger">Offline</button>
     </div>
   </div>
 
-  <div class="emergency-stop alert alert-danger" role="alert" style="display:none; margin-top:50px;">
-    <strong>Emergency stop!</strong> The system had to shut down due to an error.
-  </div>
 
   <div class = "sub-sub-sub-main-content" style="clear:both; display:none;">
         <div class="panel panel-primary">

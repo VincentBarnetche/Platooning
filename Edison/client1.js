@@ -14,24 +14,16 @@ var wd = 0;
 
 var state = 0; //0 -> Offline, 1 -> Connected, 2 -> Proximity to other car, 3 -> ready to engage platooning, 4 -> platooning
 
+//var bleno = require('bleno');
+var bleacon = require('bleacon');
+
+
+// Segmentation fault handler
+var Segfault = require('segfault');
+ 
+Segfault.registerHandler("segfaults.txt");
+
 // -------------------------------------- Connection management -------------------------------------------
-
-//Threads de communication
-socket.on('connect', function(){
-	socket.emit('connectCar',{ID:userId,UUID:userUuid});
-});
-
-socket.on('ackConnectCar',function(){
-	connected = 1;
-	wd = 1;
-	var watchdogTestPeriodique = setInterval(watchdogTest,1000);
-	console.log('connected');
-});
-
-//Watchdog
-socket.on('wdFromServer',function(){
-	wd--;
-});
 
 //Fonctions periodiques
 
@@ -44,6 +36,29 @@ var watchdogTest = function(){
 	socket.emit('wdToServer',{ID:userId});
 }
 
+//Threads de communication
+socket.on('connect', function(){
+	socket.emit('connectCar',{ID:userId,UUID:userUuid});
+});
+
+
+var watchdogTestPeriodique;
+socket.on('ackConnectCar',function(){
+	connected = 1;
+	wd = 1;
+	state=1;
+	watchdogTestPeriodique = setInterval(watchdogTest,1000);
+	eventEmitter.emit('activateiBeacon');
+	console.log('connected');
+});
+
+//Watchdog
+socket.on('wdFromServer',function(){
+	wd--;
+});
+
+
+
 //Fonctions
 var emergencyStop = function(){
 	//Met le système en état de non connection.
@@ -55,6 +70,8 @@ var emergencyStop = function(){
 	console.log('Emergency stop');
 }
 
+socket.on('emergencyStop',emergencyStop);
+
 //Evennements locaux
 eventEmitter.on('connected',function(){
 	//Mettre en place le watchdog +++
@@ -63,58 +80,65 @@ eventEmitter.on('connected',function(){
 
 
 // ----------------------------------------- iBeacon -------------------------------------------------------
-​
-var bleno = require('bleno');
-var bleacon = require('bleacon');
+
+
 //var uuid  = 'e2c56db5dffb48d2b060d0f5a71096e0';
 var major = 0;
 var minor = 0;
 var measuredPower = -59;
-​
+
+ var device_near = 0;  
+ var found_device = false;  
+ var uuid_found=0 ;
+
 // Activate iBeacon
 eventEmitter.on('activateiBeacon', function(){
-	bleno.on('stateChange', function(state) {
-        console.log('on -> stateChange: ' + state);
-​
-        if (state === 'poweredOn') {
-            bleno.startAdvertisingIBeacon(
-                userUuid, major, minor, measuredPower);
-            //console.log("Advertising!!! Hurra!");
+    // Bleacon scanning for device
+    //bleacon.startScanning();  
+});
+/*
+	bleno.on('stateChange', function(beaconState) {
+        console.log('on -> stateChange: ' + beaconState);
+        if (beaconState === 'poweredOn') {
+    		//bleno.startAdvertisingIBeacon(userUuid, major, minor, measuredPower);
+            console.log("Advertising iBeacon");
         }
         else {
             bleno.stopAdvertising();
         }
     });
-​
-    // Bleacon scanning for device
-    bleacon.startScanning();  
-    var device_near = 0;  
-    var found_device = false;  
-    var uuid_found=0 ;
-});
-​
+
+*/
+
 var uuid_liste = [];
 
+var temp;
 // Update list of connected cars - UUID 
 socket.on('uuid_liste', function (msg) { 
     // Add the UUIDs not currently in the local list
     for (i = 0 ; i < msg.liste.length ; i++){
-        var temp = msg.liste.uuid[i];
+        temp = msg.liste[i];
         if (uuid_liste.indexOf(temp) === -1){       // -1 : not present in the array
-            var newLength = uuid_liste.push("temp")
+            uuid_liste.push(temp);
         }
     }
     // Remove the UUIDs no longer present in the global list
     for (i = 0; i < uuid_liste.length ; i++){
         var temp2 = uuid_liste[i];
-        if(msg.liste.uuid.indexOf(temp2) === -1){            // -1 : not present in the array
-            var removedItem = uuid_liste.splice(pos,i); 
+        if(msg.liste.indexOf(temp2) === -1){            // -1 : not present in the array
+            uuid_liste.splice(i,1); 
+    	}
     }
 });
-​
+
+setTimeout(function(){
+	uuid_found = '5affffffffffffffffffffffffffffff';
+	console.log('sender fake melding om funnet')
+	socket.emit('found_device', {ID: userId, UUID: userUuid, foundUUID: uuid_found});
+},10000);
+
 // Searching iBeacon
 bleacon.on('discover', function(bleacon) {
-    console.log('discover');
     var compt = 0;
     // Parcourir la liste des uuids connetcées au serveur
     uuid_liste.forEach(function(item, index, array){
@@ -125,7 +149,7 @@ bleacon.on('discover', function(bleacon) {
             } else {
                 device_near = 0;
             }
-            if ((device_near > 10) && (found_device === false ){
+            if ((device_near > 10) && (found_device === false )){
                 found_device = true;
                 uuid_found = bleacon.uuid;
                 socket.emit('found_device', {ID: userId, UUID: userUuid, foundUUID: uuid_found});			// TO SERVER - found_device
@@ -141,11 +165,10 @@ bleacon.on('discover', function(bleacon) {
         socket.emit('lost_device', {ID: userId,UUID:userUuid});												// TO SERVER - lost_device
     }
 });
-
-
 // ---------------------------------- State management ------------------------------------------------------
-​
+
 socket.on('setStateProx', function(){
+	console.log("state is "+state)
 	if (state == 1) {
 		state = 2;
 		eventEmitter.emit('activateCheckInFront');
@@ -153,7 +176,7 @@ socket.on('setStateProx', function(){
 		socket.emit('alert', {ID:userId, State:state});                      	// TO SERVER - alert 
 	}
 });
-​
+
 socket.on('setStateNotProx', function(){
 	if (state == 2) {
 		state = 1;
@@ -162,9 +185,10 @@ socket.on('setStateNotProx', function(){
 		socket.emit('alert', {ID:userId,State:state});							// TO SERVER - alert
 	}
 });
-​
+
 socket.on('startPlatooning', function(){
 	if (state == 3){
+		console.log('Platooning activated');
 		state = 4;
 		eventEmitter.emit('activateLoiCommande');
 		eventEmitter.emit('deactivateCheckInFront');
@@ -172,9 +196,10 @@ socket.on('startPlatooning', function(){
 		socket.emit('alert', {ID:userId,State:state});							// TO SERVER - alert
 	}
 });
-​
+
 socket.on('stopPlatooning', function(){
 	if (state == 4) {
+		console.log('Platooning deactivated');
 		state = 3;
 		eventEmitter.emit('deactivateLoiCommande');
 		eventEmitter.emit('activateCheckInFront');
@@ -182,11 +207,11 @@ socket.on('stopPlatooning', function(){
 		socket.emit('alert', {ID:userId,State:state});							// TO SERVER - alert
 	}
 })
-​
-​
+
+var checkInFront;
 eventEmitter.on('activateCheckInFront', function(){
-	var checkInFront = setInterval(function(){
-		if (capteurDistanceG.readFloat() < ?){
+	    checkInFront = setInterval(function(){
+		if (capteurDistanceG.readFloat() < 80){
 			state = 3;
 			socket.emit('stateChange', {ID:userId,State:state});				// TO SERVER - stateChange
 		} else {
@@ -195,15 +220,13 @@ eventEmitter.on('activateCheckInFront', function(){
 		}
 	}, 500); //0.5s
 })
-​
+
 eventEmitter.on('deactivateCheckInFront', function(){
 	clearInterval(checkInFront);
 })
-​
 
 // ----------------------------------------- Commandes moteur -----------------------------------------------
 var commandeActive=0;
-
 var rapportCyclique=1;
 var mraa = require ("mraa");
 var pwm1 = new mraa.Pwm(3);
@@ -246,7 +269,6 @@ socket.on('setTourneGauche',function(){
 		tourneGauche.write(1);
 		console.log("tourne gauche");
 	}
-	
 })
 
 socket.on('setTourneDroite',function(){
@@ -262,9 +284,6 @@ socket.on('setArreteTourner',function(){
 	tourneGauche.write(0);
 	tournerDroite.write(0);
 });
-
-
-
 
 // ------------------------ loi de commande --------------------------------
 var consigne = 50;
@@ -349,12 +368,11 @@ eventEmitter.on('activateLoiCommande', function(){
 	commandeActive = 1;
 	tacheLoiDeCommande = setInterval(loiDeCommande,10);
 });
-​
+
 eventEmitter.on('deactivateLoiCommande', function(){
 	commandeActive = 0;
-	clearInterval(tacheLoiCommande);
+	clearInterval(tacheLoiDeCommande);
 })
-​
 
 
 

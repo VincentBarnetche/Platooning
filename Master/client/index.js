@@ -12,6 +12,11 @@ var state= 0;
 
 //envoie la commande de 
 $('#acc-slider').slider().on('slide',function(val) {
+
+	if(state==4) {
+		socket.emit('terminatePlatooning');
+	}
+
 	dutyCycle = val.value;
 	socket.emit('updateDuty',dutyCycle);
 });
@@ -82,7 +87,7 @@ socket.on('changeStateToWeb', function(msg){
         rightButton.removeClass("btn-success");
 
         platoonButton.disabled = true;
-        platoonButton.find("span").text="Offline";
+        platoonButton.text('Offline');
         platoonButton.addClass("btn-danger");
         platoonButton.removeClass("btn-warning");
         platoonButton.removeClass("btn-success");
@@ -97,12 +102,12 @@ socket.on('changeStateToWeb', function(msg){
         rightButton.addClass("btn-success");
 
         platoonButton.disabled = true;
-        platoonButton.find("span").text="Connected";
-        platoonButton.addClass("btn-danger");
+        platoonButton.text('Connected');
+        platoonButton.addClass("btn-primary");
         platoonButton.removeClass("btn-warning");
         platoonButton.removeClass("btn-success");
         platoonButton.removeClass("btn-info");
-        platoonButton.removeClass("btn-primary");
+        platoonButton.removeClass("btn-danger");
 
         break;
     case 2:
@@ -113,7 +118,7 @@ socket.on('changeStateToWeb', function(msg){
         rightButton.addClass("btn-success");
 
         platoonButton.disabled = true;
-        platoonButton.find("span").text="Proximity to car";
+        platoonButton.text('Proximity to car');
         platoonButton.addClass("btn-warning");
         platoonButton.removeClass("btn-primary");
         platoonButton.removeClass("btn-success");
@@ -129,7 +134,7 @@ socket.on('changeStateToWeb', function(msg){
         rightButton.addClass("btn-success");
 
         platoonButton.disabled = false;
-        platoonButton.find("span").text="Ready to platoon";
+        platoonButton.text('Click to engage platooning');
         platoonButton.addClass("btn-success");
         platoonButton.removeClass("btn-warning");
         platoonButton.removeClass("btn-danger");
@@ -145,7 +150,7 @@ socket.on('changeStateToWeb', function(msg){
         rightButton.addClass("btn-success");
 
         platoonButton.disabled = false;
-        platoonButton.find("span").text="Platooning";
+        platoonButton.text('Platooning (click to stop)');
         platoonButton.addClass("btn-info");
         platoonButton.removeClass("btn-warning");
         platoonButton.removeClass("btn-success");
@@ -161,13 +166,27 @@ socket.on('changeStateToWeb', function(msg){
 });
 
 //Demande l'état du système périodiquement pour rester au courant.
+var wd = 0;
+
 setInterval(function(){
+	wd ++;
+	if(wd > 4) {
+		wd=4;
+		$("#connection-warning").show();
+	} else {
+		$("#connection-warning").hide();
+	}
 	socket.emit('requestState');
 },1000);
 
+//verification connexion;
+socket.on('wdWeb',function(){
+	wd = 0;
+});
+
 //Emergency
 socket.on('emergencyStop',function(){
-	$(".emergency-stop").style.display = "block";
+	$("#emergency-stop").show();
 });
 
 
@@ -305,3 +324,9 @@ socket.on('carDisconnect',function(msg){
 window.onunload = function(e) {
     socket.emit("user disconnect", userId);
 }
+
+
+//test de connexion avec serveur
+
+
+
