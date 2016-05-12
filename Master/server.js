@@ -34,6 +34,9 @@ var uuid_liste = [];
 var car1Plat = {};
 var car2Plat = {};
 
+var car1 = {found:"false", found_uuid:"", uuid:"", id:""}
+var car2 = {found:"false", found_uuid:"", uuid:"", id:""}
+
 // Etats du système
 var etatConnV1 = 0;
 var etatConnV2 = 0;
@@ -80,18 +83,6 @@ eventEmitter.on('emergencyStop',function(){
 });
 
 
-//Check platooning state
-eventEmitter.on('checkPlatooning',function(){
-	//Verifie si les deux objets sont initialisés --> 
-	if (Object.keys(car1Plat).length !== 0 && Object.keys(car2Plat).length !== 0) {
-		if (car1Plat.found_device === car2Plat.found_device) {
-			platooningState = 1;
-			console.log('platooning possible');
-		}
-	}
-})
-
-
 //Fonction qui se déclenche quand il y a une nouvelle connection
 //un emit sur io correspond a un broadcast, alors qu'un emit sur socket dans la fonction répond a la connection qui a fait la demande.
 //Pour s'addresser au client web, nous faisons un broadcast avec des messages spésifiquement a eux.
@@ -109,11 +100,16 @@ io.on('connection', function(socket) {
 		//Met a jour l'etat de la connection
 		if (msg.ID == 1) {
 			state = 1;
+			socket.emit('changeStateToWeb', {State:state});
 			etatConnV1 = 1;
 			wd1=1;
+			car1.uuid = msg.UUID;
+			car1.id = msg.ID;
 		} else if (msg.ID == 2) {
 			etatConnV2 = 1;
 			wd2 = 1;
+			car2.uuid = msg.UUID;
+			car2.id = msg.ID;
 		}
 		socket.emit('ackConnectCar');
 
@@ -132,39 +128,81 @@ io.on('connection', function(socket) {
 		}
 	});
 
-	// ----------------------- iBeacon management ------------------------------------
 
-	socket.on('found_device', function(msg) {
-
-		if (msg.ID == 1 ){
-			car1Plat = msg;
-		} else if (msg.ID == 2) {
-			car2Plat=msg;
-		}
-		eventEmitter.emit('checkPlatooning');
-	    console.log('found device');
-	});
-          
-	socket.on('lost_device', function(msg) {
-	    io.emit('lostDeviceToClient',msg);
-	});
-
-	socket.on('requestInfo', function(){
-		socket.emit('infoToWeb',{car1:etatConnV1,car2:etatConnV2,plat:platooningState,connectedCars:carsConnected});
-	})
 
 	// -------------------- State management ------------------------------------------------------
 	var stateV1 = 0;
 ​
 	socket.on('alert', function(msg) {
-		if (msg.ID == 1){
-			stateV1 = msg.State;
-			console.log('Wrong state before change - car 1');
-		} else if (msg.ID == 2){
-			stateV2 = msg.State;
-			console.log('Wrong state before change - car 2');
-		}
+		state = msg.State;
+		socket.emit('changeStateToWeb', {State:state});
+		console.log('Wrong state before change')
+	});
+
+	socket.on('requestState', function(){
+		socket.emit('changeStateToWeb', {State:state});
+	});
+
+	socket.on('stateChange', function(msg) {
+		state = msg.State;
+		socket.emit('changeStateToWeb', {State:state});
 	})
+
+	// ----------------------- Proximity ---------------------------
+
+
+	socket.on('found_decive', function(msg) {
+		if (state == 1 || state == 2) {
+			if(msg.ID == 1){
+				car1.found = true;
+				car1.found_uuid = msg.foundUUID;
+				if ((car2.found) && (car2.uuid == car1.found_uuid) && (car1.uuid == car2.found_uuid)) {
+					state = 2;
+					socket.emit('setStateProx');
+					socket.emit('changeStateToWeb', {State:state});
+				}	
+			}
+			if(msg.ID == 2){
+				car2.found == true;
+				car2.found_uuid = msg.foundUUID;
+				if ((car1.found) && (car2.uuid == car1.found_uuid) && (car1.uuid == car2.found_uuid)) {
+					state = 2;
+					socket.emit('setStateProx');
+					socket.emit('changeStateToWeb', {State:state});
+				}	
+			}
+		}
+	});
+
+	socket.on('lost_device', function(msg) {
+		if (state == 1 || state == 2) {
+			if (msg.ID == 1){
+				car1.found = false;
+			}
+			if (msg.ID == 2){
+				car2.found = false;
+			}
+			state = 1;
+			socket.emit('changeStateToWeb', {State:state});
+			socket.emit('setStateNotProx');
+		}
+	});
+
+	// ----------------------- Platooning ------------------------
+
+
+socket.on('initatePlatooning', function() {
+	if (state == 3) {
+		socket.emit('startPlatooning');
+	}
+});
+
+socket.on('terminatePlatooning', function() {
+	if (state == 4) {
+		socket.emit('stopPlatooning');
+	}
+})
+
 
 
 	// ----------------------- Motor commands ---------------------
