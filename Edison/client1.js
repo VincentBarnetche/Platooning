@@ -93,6 +93,8 @@ eventEmitter.on('activateiBeacon', function(){
     var uuid_found=0 ;
 });
 ​
+var uuid_liste = [];
+
 // Update list of connected cars - UUID 
 socket.on('uuid_liste', function (msg) { 
     // Add the UUIDs not currently in the local list

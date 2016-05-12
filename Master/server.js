@@ -53,6 +53,7 @@ setInterval(function(){
 		wd1 ++;
 		if(wd1>7) {
 			etatConnV1 = 0;
+			var removedItem = uuid_liste.splice(pos,uuid_liste.indexOf(car1.uuid)); 
 			console.log('connection lost to car 1');
 		} 
 	}
@@ -61,6 +62,7 @@ setInterval(function(){
 		wd2 ++;
 		if (wd2>7) {
 			etatConnV2=0;
+			var removedItem = uuid_liste.splice(pos,uuid_liste.indexOf(car2.uuid)); 
 			console.log('connection lost to car 2');
 		}
 	}
@@ -105,13 +107,17 @@ io.on('connection', function(socket) {
 			wd1=1;
 			car1.uuid = msg.UUID;
 			car1.id = msg.ID;
+			var newLength = uuid_liste.push("car1.uuid");
 		} else if (msg.ID == 2) {
 			etatConnV2 = 1;
 			wd2 = 1;
 			car2.uuid = msg.UUID;
 			car2.id = msg.ID;
+			var newLength = uuid_liste.push("car2.uuid");
 		}
 		io.emit('ackConnectCar');
+
+
 
 		console.log('car connected');
 	});
