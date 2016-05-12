@@ -5,8 +5,8 @@ var fs = require('fs');
 var events = require('events');
 var eventEmitter = new events.EventEmitter();
 
-var userId = 2;
-var userUuid = 99999888;
+var userId = 1;
+var userUuid = 'e2c56db5dffb48d2b060d0f5a71096e0';
 
 //Etats
 var connected = 0;
