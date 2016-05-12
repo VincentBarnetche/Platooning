@@ -191,19 +191,19 @@ io.on('connection', function(socket) {
 	// ----------------------- Platooning ------------------------
 
 
-socket.on('initatePlatooning', function() {
-	if (state == 3) {
-		io.emit('startPlatooning');
-		state = 4;
-		io.emit('changeStateToWeb', {State:state});
-	}
-});
+	socket.on('initatePlatooning', function() {
+		if (state == 3) {
+			io.emit('startPlatooning');
+			state = 4;
+			io.emit('changeStateToWeb', {State:state});
+		}
+	});
 
-socket.on('terminatePlatooning', function() {
-	if (state == 4) {
-		io.emit('stopPlatooning');
-	}
-})
+	socket.on('terminatePlatooning', function() {
+		if (state == 4) {
+			io.emit('stopPlatooning');
+		}
+	})
 
 
 
