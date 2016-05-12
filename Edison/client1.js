@@ -143,7 +143,7 @@ bleacon.on('discover', function(bleacon) {
 
 // ---------------------------------- State management ------------------------------------------------------
 ​
-socket.on('proximityOK', function(){
+socket.on('setStateProx', function(){
 	if (state == 1) {
 		state = 2;
 		eventEmitter.emit('activateCheckInFront');
@@ -152,7 +152,7 @@ socket.on('proximityOK', function(){
 	}
 });
 ​
-socket.on('proximityKO', function(){
+socket.on('setStateNotProx', function(){
 	if (state == 2) {
 		state = 1;
 		eventEmitter.emit('deactivateCheckInFront');
