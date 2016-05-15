@@ -71,12 +71,18 @@ $(document).on('touchmove', function(e) {
 
 // ----------------------------------------- State switching ----------------------------------------------
 
+var dutyCycleDiv = $("#duty-cycle-div");
+var distanceDiv = $("#distance-div");
+
 socket.on('changeStateToWeb', function(msg){
 	state = msg.State;
 
 	var leftButton = $("#bouton-tourne-gauche");
 	var rightButton = $("#bouton-tourne-droite");
 	var platoonButton = $("#bouton-change-dir");
+
+	var metricsBox = $('#display-metrics');
+
 
 	switch(state) {
     case 0:
@@ -141,6 +147,8 @@ socket.on('changeStateToWeb', function(msg){
         platoonButton.removeClass("btn-info");
         platoonButton.removeClass("btn-primary");
 
+        metricsBox.hide();
+
     	break;
 	case 4:
 		//platooning
@@ -149,6 +157,7 @@ socket.on('changeStateToWeb', function(msg){
         rightButton.removeClass("btn-default");
         rightButton.addClass("btn-success");
 
+        metricsBox.show();
         platoonButton.disabled = false;
         platoonButton.text('Platooning (click to stop)');
         platoonButton.addClass("btn-info");
@@ -179,6 +188,7 @@ setInterval(function(){
 	socket.emit('requestState');
 },1000);
 
+
 //verification connexion;
 socket.on('wdWeb',function(){
 	wd = 0;
@@ -188,6 +198,11 @@ socket.on('wdWeb',function(){
 socket.on('emergencyStop',function(){
 	$("#emergency-stop").show();
 });
+
+socket.on('updateLoiCommandeWeb',function(msg){
+	distanceDiv.text("Distance: "+msg.distance);
+	dutyCycleDiv.text("Duty Cycle: "+msg.dutyCycle);
+})
 
 
 

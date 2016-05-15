@@ -85,7 +85,9 @@ setInterval(function(){
 
 },1000);
 
+
 //EmergencyStop
+
 eventEmitter.on('emergencyStop',function(){
 	etatConnV2=0;
 	etatConnV1=0;
@@ -220,6 +222,9 @@ io.on('connection', function(socket) {
 		}
 	});
 
+	socket.on('updateLoiCommande',function(msg){
+		io.emit('updateLoiCommandeWeb',msg);
+	});
 
 	// ----------------------- Motor commands ---------------------
 	socket.on('updateDuty',function(dutyCycle){

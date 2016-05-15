@@ -39,7 +39,7 @@ body {
 }
 
 .sub-sub-sub-main-content {
-    padding:50px;
+    padding:30px;
 }
 
 .off {
@@ -50,6 +50,18 @@ body {
 .on {
     background-color: limegreen;
     border: 1px solid #7f8c8d;
+}
+
+.circleBase {
+    border-radius: 50%;
+    behavior: url(PIE.htc); /* remove if you don't care about IE8 */
+}
+
+.type1 {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border: 5px solid rgb(96,192,220);
 }
 
 .clearfix {

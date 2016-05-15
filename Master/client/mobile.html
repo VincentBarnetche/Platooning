@@ -13,66 +13,56 @@
     <link href="bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
 </head>
 <body>
-  <div class="main-content">
+    <div class="main-content">
 
-    <div class="main-content-title page-header">
-        <h1>Commande platooning</h1>
-    </div>
-
-    <div class="alert alert-danger" id="emergency-stop" role="alert" style="display:none;">
-    <strong>Emergency stop!</strong> The system had to shut down due to an error.
-    </div>
-
-    <div class="alert alert-warning" id="connection-warning" role="alert" style="display:none;">
-    <strong>Warning!</strong> Connection with server is lost.
-    </div>
-
-    <div class="sub-main-content">
-        <button type="button" id="bouton-tourne-gauche" class="btn btn-lg btn-default"><span class="glyphicon glyphicon-arrow-left"></span></button>
-    </div>
-
-    <div class="sub-main-content">
-            <input
-                id="acc-slider"
-                type="text"
-                name="somename"
-                data-provide="slider"
-                data-slider-min="0"
-                data-slider-max="1"
-                data-slider-step="0.05"
-                data-slider-value="1"
-                data-slider-tooltip="hide"
-                data-slider-orientation="vertical"
-            >
-    </div>
-    <div class="sub-main-content">
-        <button type="button" id="bouton-tourne-droite" class="btn btn-lg btn-default"><span class="glyphicon glyphicon-arrow-right"></span></button>
-    </div>
-    <div class="sub-sub-main-content" style="clear:both;">
-        <button type="button" id="bouton-change-dir" class="btn btn-lg btn-danger">Offline</button>
-    </div>
-  </div>
-
-
-  <div class = "sub-sub-sub-main-content" style="clear:both; display:none;">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h3 class="panel-title">System Info</h3>
-            </div>
-            <div class="panel-body">
-                <div class="bouton-box">
-                    <span class="label label-danger" id="bouton-voiture-1">Voiture1</span>        
-                </div>    
-                <div class="bouton-box">
-                    <span class="label label-danger" id="bouton-voiture-2">Voiture2</span>
-                </div>
-                <div class="info-box" style="clear:both;">
-                    <textarea name="title_distance">Distance : </textarea>   
-                    <textarea id="infoSystemText" name="infoSystem">uknown</textarea>
-                </div>        
-            </div>
+        <div class="main-content-title page-header">
+            <h1>Commande platooning</h1>
         </div>
+
+        <div class="alert alert-danger" id="emergency-stop" role="alert" style="display:none;">
+        <strong>Emergency stop!</strong> The system had to shut down due to an error.
+        </div>
+
+        <div class="alert alert-warning" id="connection-warning" role="alert" style="display:none;">
+        <strong>Warning!</strong> Connection with server is lost.
+        </div>
+
+        <div class="sub-main-content">
+            <button type="button" id="bouton-tourne-gauche" class="btn btn-lg btn-default"><span class="glyphicon glyphicon-arrow-left"></span></button>
+        </div>
+
+        <div class="sub-main-content">
+                <input
+                    id="acc-slider"
+                    type="text"
+                    name="somename"
+                    data-provide="slider"
+                    data-slider-min="0"
+                    data-slider-max="1"
+                    data-slider-step="0.05"
+                    data-slider-value="1"
+                    data-slider-tooltip="hide"
+                    data-slider-orientation="vertical"
+                >
+        </div>
+        <div class="sub-main-content">
+            <button type="button" id="bouton-tourne-droite" class="btn btn-lg btn-default"><span class="glyphicon glyphicon-arrow-right"></span></button>
+        </div>
+        <div class="sub-sub-main-content" style="clear:both;">
+            <button type="button" id="bouton-change-dir" class="btn btn-lg btn-danger">Offline</button>
+        </div>
+    </div>
+
+
+    <div class = "sub-sub-sub-main-content" id="display-metrics" style="clear:both; display:none;">
+        
+        <div class="circleBase type1" id="duty-cycle-div" style="text-size:30px;color:rgb(96,192,220);margin-left:300px;"><h1 style="margin-top:25px;">64%</h1></div>
+        <div style="margin-top:-20px; margin-bottom:20px;"><h4>Duty Cycle</h4></div>
+        <div class="circleBase type1" id="distance-div" style="text-size:30px;color:rgb(96,192,220);margin-left:300px;"><h1 style="margin-top:25px;">30.1</h1></div>
+        <div style="margin-top:-20px;"><h4>Distance to car (cm)</h4></div>
     </div>  
+
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
     <script src="bootstrap/dist/js/bootstrap.min.js"></script>
