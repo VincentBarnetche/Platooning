@@ -10,7 +10,7 @@ var fs = require('fs');
 var events = require('events');
 var eventEmitter = new events.EventEmitter();
 
-//var bleno = require('bleno');
+var bleno = require('bleno');
 var bleacon = require('bleacon');
 
 // Segmentation fault handler

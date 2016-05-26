@@ -200,8 +200,8 @@ socket.on('emergencyStop',function(){
 });
 
 socket.on('updateLoiCommandeWeb',function(msg){
-	distanceDiv.text("Distance: "+msg.distance);
-	dutyCycleDiv.text("Duty Cycle: "+msg.dutyCycle);
+	distanceDiv.find("h1").text(msg.distance.toFixed(1));
+	dutyCycleDiv.find("h1").text(msg.dutyCycle.toFixed(1));
 })
 
 
